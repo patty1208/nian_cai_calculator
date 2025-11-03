@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>年菜價格計算器（新版）</title>
+<title>年菜價格計算器（手機版修正版）</title>
 <style>
 body {
   font-family: "Noto Sans TC", sans-serif;
@@ -61,38 +61,48 @@ table {
 th, td {
   border: 1px solid #ddd;
   text-align: center;
-  padding: 10px;
+  padding: 8px;
   font-size: 15px;
   word-wrap: break-word;
 }
 
-th {
-  background: #f7f7f7;
-  font-weight: 600;
+/* 第一欄(編號)自動依內容寬度 */
+th:first-child, td:first-child {
+  width: 40px;
+  white-space: nowrap;
 }
 
-tr:nth-child(even) {
-  background: #fefefe;
-}
+/* 價格、數量、小計 欄位固定比例寬度 */
+th:nth-child(3), td:nth-child(3) { width: 18%; }
+th:nth-child(4), td:nth-child(4) { width: 18%; }
+th:nth-child(5), td:nth-child(5) { width: 22%; }
 
+/* 輸入框固定寬度且不撐開欄位 */
 input[type="number"] {
-  width: 70px;
+  width: 60px;
   text-align: center;
   border: 1px solid #ccc;
   border-radius: 6px;
-  padding: 6px;
+  padding: 4px;
   font-size: 15px;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
-input:focus {
-  outline: none;
-  border-color: #ff7043;
-  box-shadow: 0 0 4px #ff7043;
-}
-
-/* 防止 iPhone 輸入框放大 */
+/* 防止 iPhone 點擊時放大畫面 */
 input, select, textarea {
   font-size: 16px !important;
+}
+
+/* 響應式（手機視圖） */
+@media (max-width: 600px) {
+  th, td {
+    padding: 6px;
+    font-size: 14px;
+  }
+  input[type="number"] {
+    width: 50px;
+  }
 }
 </style>
 </head>
@@ -141,12 +151,11 @@ const products = [
 const STORAGE_KEY = "nianCaiSave";
 const tableBody = document.querySelector("tbody");
 
-// 建立表格
 function renderTable() {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
   products.forEach((p, i) => {
-    const tr = document.createElement("tr");
     const qty = saved[i] ?? 0;
+    const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${i}</td>
       <td>${p.name}</td>
@@ -158,7 +167,6 @@ function renderTable() {
   });
 }
 
-// 計算總金額、總品項、總數量
 function updateTotals() {
   let totalPrice = 0, totalItems = 0, totalQuantity = 0;
   const saveData = {};
@@ -166,7 +174,7 @@ function updateTotals() {
   tableBody.querySelectorAll("tr").forEach((row, i) => {
     const input = row.querySelector("input");
     let qty = parseInt(input.value) || 0;
-    input.value = qty; // 空白自動填 0
+    input.value = qty;
     const subtotal = qty * products[i].price;
     row.querySelector(".subtotal").textContent = subtotal.toLocaleString();
     totalPrice += subtotal;
@@ -182,24 +190,20 @@ function updateTotals() {
   document.getElementById("totalQuantity").textContent = totalQuantity;
 }
 
-// 清除按鈕
 document.getElementById("clearBtn").addEventListener("click", () => {
   tableBody.querySelectorAll("input").forEach(inp => inp.value = 0);
   localStorage.removeItem(STORAGE_KEY);
   updateTotals();
 });
 
-// 即時計算
 tableBody.addEventListener("input", updateTotals);
 
-// 點擊 input 清除 0
 tableBody.addEventListener("focusin", e => {
   if (e.target.tagName === "INPUT" && e.target.value === "0") {
     e.target.value = "";
   }
 });
 
-// 離開 input 空白視為 0
 tableBody.addEventListener("focusout", e => {
   if (e.target.tagName === "INPUT") {
     if (e.target.value === "" || isNaN(e.target.value)) e.target.value = "0";
@@ -207,7 +211,6 @@ tableBody.addEventListener("focusout", e => {
   }
 });
 
-// 初始化
 renderTable();
 updateTotals();
 </script>
