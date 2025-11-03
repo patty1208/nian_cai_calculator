@@ -2,79 +2,105 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>年菜價格計算器（終極版）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>年菜價格計算器（新版）</title>
 <style>
 body {
   font-family: "Noto Sans TC", sans-serif;
   margin: 0;
-  background: #f8f8f8;
+  background: #f5f6fa;
   color: #333;
 }
 
 header {
   position: sticky;
   top: 0;
-  background: white;
-  padding: 12px;
+  background: #fff;
+  padding: 10px;
   text-align: center;
-  border-bottom: 2px solid #ddd;
+  border-bottom: 2px solid #ccc;
   z-index: 100;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-header .totals {
-  font-weight: bold;
-  line-height: 1.6;
+header .line1 {
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+header .line2 {
+  font-size: 15px;
 }
 
 button {
-  background: #d9534f;
+  background: #ff7043;
   color: white;
   border: none;
   padding: 8px 16px;
-  border-radius: 6px;
-  margin-top: 6px;
+  border-radius: 8px;
+  margin-top: 8px;
   font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #ff5722;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: #fff;
   margin-top: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  table-layout: fixed;
 }
 
 th, td {
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   text-align: center;
   padding: 10px;
   font-size: 15px;
+  word-wrap: break-word;
 }
 
 th {
-  background: #eee;
+  background: #f7f7f7;
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background: #fefefe;
 }
 
 input[type="number"] {
   width: 70px;
   text-align: center;
   border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 5px;
+  border-radius: 6px;
+  padding: 6px;
   font-size: 15px;
 }
 
-tr:nth-child(even) {
-  background: #fafafa;
+input:focus {
+  outline: none;
+  border-color: #ff7043;
+  box-shadow: 0 0 4px #ff7043;
+}
+
+/* 防止 iPhone 輸入框放大 */
+input, select, textarea {
+  font-size: 16px !important;
 }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="totals">
-    總金額：<span id="totalPrice">0</span> 元　|　
+  <div class="line1">總金額：<span id="totalPrice">0</span> 元</div>
+  <div class="line2">
     總品項數量：<span id="totalItems">0</span>　|　
     商品總數量：<span id="totalQuantity">0</span>
   </div>
@@ -84,6 +110,7 @@ tr:nth-child(even) {
 <table id="productTable">
   <thead>
     <tr>
+      <th>編號</th>
       <th>商品名稱</th>
       <th>價格</th>
       <th>數量</th>
@@ -114,13 +141,14 @@ const products = [
 const STORAGE_KEY = "nianCaiSave";
 const tableBody = document.querySelector("tbody");
 
-// 生成表格
+// 建立表格
 function renderTable() {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
   products.forEach((p, i) => {
     const tr = document.createElement("tr");
     const qty = saved[i] ?? 0;
     tr.innerHTML = `
+      <td>${i}</td>
       <td>${p.name}</td>
       <td>${p.price}</td>
       <td><input type="number" min="0" value="${qty}" data-index="${i}" inputmode="numeric" pattern="[0-9]*"></td>
@@ -138,7 +166,7 @@ function updateTotals() {
   tableBody.querySelectorAll("tr").forEach((row, i) => {
     const input = row.querySelector("input");
     let qty = parseInt(input.value) || 0;
-    input.value = qty; // 保證空白自動變 0
+    input.value = qty; // 空白自動填 0
     const subtotal = qty * products[i].price;
     row.querySelector(".subtotal").textContent = subtotal.toLocaleString();
     totalPrice += subtotal;
@@ -154,7 +182,7 @@ function updateTotals() {
   document.getElementById("totalQuantity").textContent = totalQuantity;
 }
 
-// 點擊清除按鈕
+// 清除按鈕
 document.getElementById("clearBtn").addEventListener("click", () => {
   tableBody.querySelectorAll("input").forEach(inp => inp.value = 0);
   localStorage.removeItem(STORAGE_KEY);
