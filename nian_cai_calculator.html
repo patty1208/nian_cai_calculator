@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>年菜價格計算器（手機版修正版）</title>
+<title>年菜價格計算器（含年菜一組）</title>
 <style>
 body {
   font-family: "Noto Sans TC", sans-serif;
@@ -37,9 +37,9 @@ button {
   background: #ff7043;
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 8px;
-  margin-top: 8px;
+  margin: 6px 4px;
   font-size: 15px;
   cursor: pointer;
   transition: background 0.2s;
@@ -114,7 +114,10 @@ input, select, textarea {
     總品項數量：<span id="totalItems">0</span>　|　
     商品總數量：<span id="totalQuantity">0</span>
   </div>
-  <button id="clearBtn">清除所有數量</button>
+  <div>
+    <button id="clearBtn">清除所有數量</button>
+    <button id="nianCaiBtn">年菜一組</button>
+  </div>
 </header>
 
 <table id="productTable">
@@ -190,20 +193,33 @@ function updateTotals() {
   document.getElementById("totalQuantity").textContent = totalQuantity;
 }
 
+// 清除所有數量
 document.getElementById("clearBtn").addEventListener("click", () => {
   tableBody.querySelectorAll("input").forEach(inp => inp.value = 0);
   localStorage.removeItem(STORAGE_KEY);
   updateTotals();
 });
 
+// 年菜一組（將編號1~9數量設為1）
+document.getElementById("nianCaiBtn").addEventListener("click", () => {
+  tableBody.querySelectorAll("tr").forEach((row, i) => {
+    const input = row.querySelector("input");
+    if (i >= 1 && i <= 9) input.value = 1;
+  });
+  updateTotals();
+});
+
+// 即時計算
 tableBody.addEventListener("input", updateTotals);
 
+// 點擊 input 清除 0
 tableBody.addEventListener("focusin", e => {
   if (e.target.tagName === "INPUT" && e.target.value === "0") {
     e.target.value = "";
   }
 });
 
+// 離開 input 空白視為 0
 tableBody.addEventListener("focusout", e => {
   if (e.target.tagName === "INPUT") {
     if (e.target.value === "" || isNaN(e.target.value)) e.target.value = "0";
