@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>年菜價格計算器（終極版）</title>
+<style>
+body {
+  font-family: "Noto Sans TC", sans-serif;
+  margin: 0;
+  background: #f8f8f8;
+  color: #333;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 12px;
+  text-align: center;
+  border-bottom: 2px solid #ddd;
+  z-index: 100;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+header .totals {
+  font-weight: bold;
+  line-height: 1.6;
+}
+
+button {
+  background: #d9534f;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  text-align: center;
+  padding: 10px;
+  font-size: 15px;
+}
+
+th {
+  background: #eee;
+}
+
+input[type="number"] {
+  width: 70px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
+  font-size: 15px;
+}
+
+tr:nth-child(even) {
+  background: #fafafa;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="totals">
+    總金額：<span id="totalPrice">0</span> 元　|　
+    總品項數量：<span id="totalItems">0</span>　|　
+    商品總數量：<span id="totalQuantity">0</span>
+  </div>
+  <button id="clearBtn">清除所有數量</button>
+</header>
+
+<table id="productTable">
+  <thead>
+    <tr>
+      <th>商品名稱</th>
+      <th>價格</th>
+      <th>數量</th>
+      <th>小計</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+const products = [
+  { name: "整組年菜", price: 8800 },
+  { name: "烏魚子五彩冷盤", price: 1200 },
+  { name: "貝柱佛跳牆", price: 1280 },
+  { name: "鰻魚米糕", price: 680 },
+  { name: "麻油雞腰烏魚膘", price: 800 },
+  { name: "龍蝦粄條蝦餃", price: 1400 },
+  { name: "藥膳鱸鰻雞湯", price: 1080 },
+  { name: "油雞腿拼醉蝦", price: 680 },
+  { name: "清蒸鮮魚", price: 680 },
+  { name: "時蔬燴三珍", price: 880 },
+  { name: "西魯肉", price: 520 },
+  { name: "筍絲蹄膀", price: 680 },
+  { name: "仙草雞", price: 680 },
+  { name: "蒲燒鰻", price: 380 }
+];
+
+const STORAGE_KEY = "nianCaiSave";
+const tableBody = document.querySelector("tbody");
+
+// 生成表格
+function renderTable() {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  products.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    const qty = saved[i] ?? 0;
+    tr.innerHTML = `
+      <td>${p.name}</td>
+      <td>${p.price}</td>
+      <td><input type="number" min="0" value="${qty}" data-index="${i}" inputmode="numeric" pattern="[0-9]*"></td>
+      <td class="subtotal">${(qty * p.price).toLocaleString()}</td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+
+// 計算總金額、總品項、總數量
+function updateTotals() {
+  let totalPrice = 0, totalItems = 0, totalQuantity = 0;
+  const saveData = {};
+
+  tableBody.querySelectorAll("tr").forEach((row, i) => {
+    const input = row.querySelector("input");
+    let qty = parseInt(input.value) || 0;
+    input.value = qty; // 保證空白自動變 0
+    const subtotal = qty * products[i].price;
+    row.querySelector(".subtotal").textContent = subtotal.toLocaleString();
+    totalPrice += subtotal;
+    if (qty > 0) totalItems++;
+    totalQuantity += qty;
+    saveData[i] = qty;
+  });
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+
+  document.getElementById("totalPrice").textContent = totalPrice.toLocaleString();
+  document.getElementById("totalItems").textContent = totalItems;
+  document.getElementById("totalQuantity").textContent = totalQuantity;
+}
+
+// 點擊清除按鈕
+document.getElementById("clearBtn").addEventListener("click", () => {
+  tableBody.querySelectorAll("input").forEach(inp => inp.value = 0);
+  localStorage.removeItem(STORAGE_KEY);
+  updateTotals();
+});
+
+// 即時計算
+tableBody.addEventListener("input", updateTotals);
+
+// 點擊 input 清除 0
+tableBody.addEventListener("focusin", e => {
+  if (e.target.tagName === "INPUT" && e.target.value === "0") {
+    e.target.value = "";
+  }
+});
+
+// 離開 input 空白視為 0
+tableBody.addEventListener("focusout", e => {
+  if (e.target.tagName === "INPUT") {
+    if (e.target.value === "" || isNaN(e.target.value)) e.target.value = "0";
+    updateTotals();
+  }
+});
+
+// 初始化
+renderTable();
+updateTotals();
+</script>
+
+</body>
+</html>
